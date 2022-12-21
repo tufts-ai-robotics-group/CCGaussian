@@ -123,9 +123,9 @@ def train_gcd(args):
                 data = (data.to(device))
                 targets = (targets.long().to(device))
                 with torch.set_grad_enabled(phase == "train"):
-                    logits, norm_embeds, means, sigma2s = model(data)
+                    logits, embeds, means, sigma2s = model(data)
                     sup_loss = args.w_sup * \
-                        sup_loss_func(logits, norm_embeds, means, sigma2s, targets)
+                        sup_loss_func(logits, embeds, means, sigma2s, targets)
                     if phase == "train":
                         sup_loss.backward()
                 # supervised stats
@@ -134,7 +134,7 @@ def train_gcd(args):
                                   sup_count * epoch_sup_loss) / (sup_count + data.size(0))
                 epoch_acc = (torch.sum(preds == targets.data) +
                              epoch_acc * sup_count).double() / (sup_count + data.size(0))
-                epoch_nll = (NDCCLoss.nll_loss(norm_embeds, means, sigma2s, targets) +
+                epoch_nll = (NDCCLoss.nll_loss(embeds, means, sigma2s, targets) +
                              epoch_nll * sup_count) / (sup_count + data.size(0))
                 sigma2s_mean = (torch.mean(sigma2s) * data.size(0) +
                                 sigma2s_mean * sup_count) / (sup_count + data.size(0))
@@ -150,10 +150,10 @@ def train_gcd(args):
                     # unsupervised forward, loss, and backward
                     with torch.set_grad_enabled(True):
                         u_data, u_t_data = u_data.to(device), u_t_data.to(device)
-                        _, u_norm_embeds, _, sigma2s = model(u_data)
-                        _, u_t_norm_embeds, _, _ = model(u_t_data)
+                        _, u_embeds, _, sigma2s = model(u_data)
+                        _, u_t_embeds, _, _ = model(u_t_data)
                         unsup_loss = (1 - args.w_sup) * \
-                            unsup_loss_func(u_norm_embeds, u_t_norm_embeds, sigma2s)
+                            unsup_loss_func(u_embeds, u_t_embeds, sigma2s)
                         unsup_loss.backward()
                     # unsupervised stats
                     epoch_unsup_loss = (

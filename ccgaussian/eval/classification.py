@@ -39,9 +39,9 @@ if __name__ == "__main__":
     true_targets = torch.tensor([])
     for data, targets in valid_dataloader:
         with torch.no_grad():
-            logits, norm_embeds, means, sigma2s = model(data.to(device))
+            logits, embeds, means, sigma2s = model(data.to(device))
             logits = logits.to("cpu")
-            dists = sq_mahalanobis_dist(norm_embeds, means, sigma2s).to("cpu")
+            dists = sq_mahalanobis_dist(embeds, means, sigma2s).to("cpu")
             classifier_pred = torch.hstack((classifier_pred, torch.argmax(logits, 1)))
             ccg_pred = torch.hstack((ccg_pred, torch.argmin(dists, 1)))
             true_targets = torch.hstack((true_targets, targets))

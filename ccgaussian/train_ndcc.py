@@ -107,8 +107,8 @@ def train_ndcc(args):
                 targets = (targets.long().to(device))
                 optim.zero_grad()
                 with torch.set_grad_enabled(phase == "train"):
-                    logits, norm_embeds, means, sigma2s = model(data)
-                    loss = loss_func(logits, norm_embeds, means, sigma2s, targets)
+                    logits, embeds, means, sigma2s = model(data)
+                    loss = loss_func(logits, embeds, means, sigma2s, targets)
                 # backward and optimize only if in training phase
                 if phase == "train":
                     loss.backward()
@@ -119,7 +119,7 @@ def train_ndcc(args):
                               cnt * epoch_loss) / (cnt + data.size(0))
                 epoch_acc = (torch.sum(preds == targets.data) +
                              epoch_acc * cnt).double() / (cnt + data.size(0))
-                epoch_nll = (NDCCLoss.nll_loss(norm_embeds, means, sigma2s, targets) +
+                epoch_nll = (NDCCLoss.nll_loss(embeds, means, sigma2s, targets) +
                              epoch_nll * cnt) / (cnt + data.size(0))
                 sigma2s_mean = (torch.mean(sigma2s) * data.size(0) +
                                 sigma2s_mean * cnt) / (cnt + data.size(0))
