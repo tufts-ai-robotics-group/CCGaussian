@@ -308,6 +308,13 @@ def train_gcd(args):
                 })
             # output statistics
             av_writer.write(epoch)
+    # cache outputs and create figures
+    out_dir = Path(av_writer.writer.get_logdir())
+    torch.save(model.state_dict(), out_dir / f"{args.num_epochs}.pt")
+    pickle.dump(gmm, open(out_dir / "gmm.pkl", "wb"))
+    cache_test_outputs(model, normal_classes, test_loader, out_dir)
+    figs = eval_from_cache(out_dir)
+    av_writer.writer.add_figure("Test/Figures", figs)
     # record hparams all at once and after all other writer calls
     # to avoid issues with Tensorboard changing output file
     av_writer.writer.add_hparams({
@@ -318,11 +325,6 @@ def train_gcd(args):
         "w_nll": args.w_nll,
         "w_unlab": args.w_unlab,
     }, metric_dict)
-    out_dir = Path(av_writer.writer.get_logdir())
-    torch.save(model.state_dict(), out_dir / f"{args.num_epochs}.pt")
-    pickle.dump(gmm, open(out_dir / "gmm.pkl", "wb"))
-    cache_test_outputs(model, normal_classes, test_loader, out_dir)
-    eval_from_cache(out_dir)
 
 
 if __name__ == "__main__":
